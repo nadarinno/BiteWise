@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "24287018059",
-    "project_id": "bitewise-edcd6",
-    "storage_bucket": "bitewise-edcd6.firebasestorage.app"
+    "project_number": "10206445062",
+    "project_id": "bitewise-b831e",
+    "storage_bucket": "bitewise-b831e.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:24287018059:android:527bd7f7ec829b54e361ce",
+        "mobilesdk_app_id": "1:10206445062:android:f9c47674e8cac628ff0d87",
         "android_client_info": {
           "package_name": "com.example.bitewise"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBisYcXBi6hkiK2LwHceQfP-psqLhSeRmc"
+          "current_key": "AIzaSyA-dPM4Hi-T8w44uoIjv7QaYrWRQpTcIts"
         }
       ],
       "services": {
