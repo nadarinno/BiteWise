@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:bitewise/viewmodel/theme_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -220,6 +221,9 @@ String? validatePassword(String? value) {
                                       );
 
                                       if (success) {
+                                        if (!context.mounted) return;
+                                          await context.read<ThemeViewModel>().setTheme(true);
+
                                         if (!context.mounted) return;
 
                                         Navigator.pushReplacement(

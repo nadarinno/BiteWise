@@ -337,29 +337,34 @@ SizedBox(
   }
 
   Widget _bar(
-    BuildContext context,
-    String name,
-    int value,
-    int goal,
-  ) {
-    final theme = Theme.of(context);
-    final percent = value / goal;
+  BuildContext context,
+  String name,
+  int value,
+  int goal,
+) {
+  final theme = Theme.of(context);
+  final percent = (value / goal).clamp(0.0, 1.0);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "$name: ${value}g",
-          style: theme.textTheme.bodyLarge,
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        "$name: ${value}g",
+        style: theme.textTheme.bodyLarge,
+      ),
+      const SizedBox(height: 5),
+      LinearProgressIndicator(
+        value: percent,
+        minHeight: 8,
+        borderRadius: BorderRadius.circular(20),
+        backgroundColor: theme.dividerColor,
+        valueColor: AlwaysStoppedAnimation<Color>(
+          theme.colorScheme.primary,
         ),
-        const SizedBox(height: 5),
-        LinearProgressIndicator(
-          value: percent > 1 ? 1 : percent,
-          minHeight: 8,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        const SizedBox(height: 12),
-      ],
-    );
+      ),
+      const SizedBox(height: 12),
+    ],
+  );
+
   }
 }

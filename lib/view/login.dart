@@ -1,6 +1,7 @@
 
 import 'dart:ui';
 import 'package:bitewise/view/home.dart';
+import 'package:bitewise/viewmodel/theme_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/auth_view_model.dart';
@@ -36,7 +37,7 @@ class LoginScreen extends StatelessWidget {
     }
 
     if (value.trim().length < 6) {
-      return "Password must be at least 6 characters";
+      return "Password must be at least 8 characters";
     }
 
     return null;
@@ -334,21 +335,19 @@ class LoginScreen extends StatelessWidget {
   );
 
   if (success) {
-    if (!context.mounted) return;
+  if (!context.mounted) return;
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const HomeScreen(),
-      ),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(auth.error ?? "Login failed"),
-      ),
-    );
-  }
+  await context.read<ThemeViewModel>().loadThemeForCurrentUser();
+
+  if (!context.mounted) return;
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const HomeScreen(),
+    ),
+  );
+}
 },
                                     child: const Text(
                                       "Login",
