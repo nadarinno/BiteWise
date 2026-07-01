@@ -43,16 +43,17 @@ class HistoryScreen extends StatelessWidget {
             );
           }
 
+       
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: docs.length,
-            itemBuilder: (context, i) {
-              final meal = docs[i].data();
-              final docId = docs[i].id;
+  padding: const EdgeInsets.fromLTRB(16, 16, 16, 35),
+  itemCount: docs.length,
+  itemBuilder: (context, i) {
+    final meal = docs[i].data();
+    final docId = docs[i].id;
 
-              return _mealBox(context, meal, docId);
-            },
-          );
+    return _mealBox(context, meal, docId);
+  },
+);
         },
       ),
     );

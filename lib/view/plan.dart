@@ -84,19 +84,23 @@ class PlanScreen extends StatelessWidget {
 
                       const SizedBox(height: 20),
 
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          context.read<PlanViewModel>().loadPlan(forceNew: true);
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text(
-                          "Generate New Plan",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
+                  
+                      Padding(
+  padding: const EdgeInsets.only(bottom: 50),
+  child: ElevatedButton.icon(
+    onPressed: () {
+      context.read<PlanViewModel>().loadPlan(forceNew: true);
+    },
+    icon: const Icon(Icons.refresh),
+    label: const Text(
+      "Generate New Plan",
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+  ),
+)
                     ],
                   ),
                 ),

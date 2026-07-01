@@ -122,14 +122,43 @@ class DashboardSection extends StatelessWidget {
         const SizedBox(height: 20),
 
         
-CaloriesChartModern(
-  key: ValueKey("${weeklyCalories.join("-")}-$todayCalories"),
-  calories: List<int>.from(weeklyCalories),
-  goal: goalCalories,
-  todayCalories: todayCalories,
-  remainingCalories: remainingCalories,
-  takenCalories: todayCalories,
+
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    IconButton(
+      onPressed: vm.goToPreviousWeek,
+      icon: const Icon(Icons.chevron_left),
+    ),
+    Column(
+      children: [
+        Text(
+          vm.isCurrentWeek ? "This Week" : "Selected Week",
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Text(
+          vm.selectedWeekText,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    ),
+    IconButton(
+      onPressed: vm.goToNextWeek,
+      icon: const Icon(Icons.chevron_right),
+    ),
+  ],
 ),
+  const SizedBox(height: 20),
+
+CaloriesChartModern(
+  calories: vm.weeklyCalories,
+  goal: vm.goalCalories,
+  todayCalories: vm.todayCalories,
+  remainingCalories: vm.remainingCalories,
+  takenCalories: vm.todayCalories,
+  highlightedIndex: vm.highlightedDayIndex,
+),
+
         const SizedBox(height: 20),
 
         SummaryBar(

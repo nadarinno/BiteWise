@@ -8,6 +8,7 @@ class CaloriesChartModern extends StatelessWidget {
   final int todayCalories;
   final int remainingCalories;
   final int takenCalories;
+  final int? highlightedIndex;
 
   const CaloriesChartModern({
     super.key,
@@ -16,6 +17,7 @@ class CaloriesChartModern extends StatelessWidget {
     required this.todayCalories,
     required this.remainingCalories,
     required this.takenCalories,
+    this.highlightedIndex,
   });
 
   @override
@@ -50,7 +52,9 @@ class CaloriesChartModern extends StatelessWidget {
             "Weekly Calories",
             style: theme.textTheme.titleLarge,
           ),
+
           const SizedBox(height: 18),
+
           Row(
             children: [
               Container(
@@ -71,16 +75,20 @@ class CaloriesChartModern extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 18),
+
           SizedBox(
             height: 280,
+
+            
             child: BarChart(
-              key: ValueKey(safeCalories.join("-")),
               BarChartData(
                 minY: 0,
                 maxY: maxY,
                 alignment: BarChartAlignment.spaceAround,
                 borderData: FlBorderData(show: false),
+
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
@@ -92,6 +100,7 @@ class CaloriesChartModern extends StatelessWidget {
                     );
                   },
                 ),
+
                 extraLinesData: ExtraLinesData(
                   horizontalLines: [
                     HorizontalLine(
@@ -102,6 +111,7 @@ class CaloriesChartModern extends StatelessWidget {
                     ),
                   ],
                 ),
+
                 titlesData: FlTitlesData(
                   topTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
@@ -123,6 +133,7 @@ class CaloriesChartModern extends StatelessWidget {
                         if (value == 2500) return _axisText(context, "2.5K");
                         if (value == 3000) return _axisText(context, "3K");
                         if (value == 3500) return _axisText(context, "3.5K");
+
                         return const SizedBox.shrink();
                       },
                     ),
@@ -132,7 +143,16 @@ class CaloriesChartModern extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 28,
                       getTitlesWidget: (value, meta) {
-                        const days = ["M", "T", "W", "T", "F", "S", "S"];
+                        const days = [
+                          "M",
+                          "T",
+                          "W",
+                          "T",
+                          "F",
+                          "S",
+                          "S",
+                        ];
+
                         final index = value.toInt();
 
                         if (index < 0 || index >= days.length) {
@@ -153,6 +173,7 @@ class CaloriesChartModern extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 barTouchData: BarTouchData(
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(
@@ -173,10 +194,12 @@ class CaloriesChartModern extends StatelessWidget {
                     },
                   ),
                 ),
+
                 barGroups: List.generate(7, (i) {
                   final value = safeCalories[i];
-                  final todayIndex = DateTime.now().weekday - 1;
-                  final isToday = i == todayIndex;
+
+                  final isHighlighted =
+                      highlightedIndex != null && i == highlightedIndex;
 
                   return BarChartGroupData(
                     x: i,
@@ -186,7 +209,7 @@ class CaloriesChartModern extends StatelessWidget {
                         toY: value.toDouble(),
                         width: 20,
                         borderRadius: BorderRadius.circular(14),
-                        color: isToday
+                        color: isHighlighted
                             ? theme.colorScheme.primary
                             : theme.colorScheme.onSurface.withOpacity(0.8),
                         backDrawRodData: BackgroundBarChartRodData(
@@ -199,8 +222,7 @@ class CaloriesChartModern extends StatelessWidget {
                   );
                 }),
               ),
-              swapAnimationDuration: const Duration(milliseconds: 700),
-              swapAnimationCurve: Curves.easeOutCubic,
+              swapAnimationDuration: Duration.zero,
             ),
           ),
         ],

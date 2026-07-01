@@ -82,6 +82,7 @@ class CameraScreen extends StatelessWidget {
                 icon: Icons.apple,
                 value: "snack",
               ),
+                const SizedBox(height: 30),
             ],
           ),
         );

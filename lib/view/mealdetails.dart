@@ -56,7 +56,8 @@ class MealDetailsScreen extends StatelessWidget {
                 children: [
                   _mealImage(context, imageUrl),
                   Padding(
-                    padding: const EdgeInsets.all(24),
+                  
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 55),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

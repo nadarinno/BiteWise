@@ -160,89 +160,96 @@ class _ResultScreenState extends State<ResultScreen> {
      const SizedBox(height: 12),
 
 
-SizedBox(
-  width: double.infinity,
-  height: 54,
-  child: ElevatedButton(
-    onPressed: data.calories == 0 || _isSaving
-        ? null
-        : () async {
-            setState(() {
-              _isSaving = true;
-            });
+Padding(
+  padding: const EdgeInsets.only(bottom: 35),
+  child: SizedBox(
+    width: double.infinity,
+    height: 54,
+    child: ElevatedButton(
+      onPressed: data.calories == 0 || _isSaving
+          ? null
+          : () async {
+              setState(() {
+                _isSaving = true;
+              });
 
-            try {
-              await context.read<NutritionViewModel>().saveMeal();
+              try {
+                await context.read<NutritionViewModel>().saveMeal();
 
-              if (!context.mounted) return;
+                if (!context.mounted) return;
 
-              await context
-                  .read<DashboardViewModel>()
-                  .refreshAfterMealSaved();
+                await context
+                    .read<DashboardViewModel>()
+                    .refreshAfterMealSaved();
 
-              if (!context.mounted) return;
+                if (!context.mounted) return;
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Meal saved successfully"),
-                ),
-              );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Meal saved successfully"),
+                  ),
+                );
 
-              Navigator.pop(context);
-            } finally {
-              if (mounted) {
-                setState(() {
-                  _isSaving = false;
-                });
+                Navigator.pop(context);
+              } finally {
+                if (mounted) {
+                  setState(() {
+                    _isSaving = false;
+                  });
+                }
               }
-            }
-          },
-    child: AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
-      child: _isSaving
-          ? Row(
-              key: const ValueKey("loading"),
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.3,
-                    color: Colors.white,
+            },
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: _isSaving
+            ? Row(
+                key: const ValueKey("loading"),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.3,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                SizedBox(width: 12),
-                Text(
-                  "Saving...",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  SizedBox(width: 12),
+                  Text(
+                    "Saving...",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-              ],
-            )
-          : Row(
-              key: const ValueKey("save"),
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.save),
-                SizedBox(width: 8),
-                Text(
-                  "Save Meal",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                ],
+              )
+            : Row(
+                key: const ValueKey("save"),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.save),
+                  SizedBox(width: 8),
+                  Text(
+                    "Save Meal",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     ),
   ),
 )
+
         ],
+        
       ),
+      
     );
+    
   }
 
   Widget _mealTypeBadge(BuildContext context, String mealType) {

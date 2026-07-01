@@ -38,6 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final vm = context.watch<ChatViewModel>();
     final theme = Theme.of(context);
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -91,7 +92,13 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
 
           Container(
-            padding: const EdgeInsets.all(10),
+            
+            padding: EdgeInsets.fromLTRB(
+    10,
+    10,
+    10,
+    isKeyboardOpen ? 10 : 50,
+  ),
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
               border: Border(

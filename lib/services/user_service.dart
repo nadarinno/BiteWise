@@ -225,14 +225,31 @@ Future<void> saveUser(UserModel user) async {
     return DailyPlan.fromJson(doc.data()!);
   }
 
-  // WEEKLY CHART
-  Future<List<int>> getWeeklyCalories() async {
+ // WEEKLY CHART
+Future<List<int>> getWeeklyCalories({DateTime? weekStartDate}) async {
   final uid = FirebaseAuth.instance.currentUser!.uid;
+
   final now = DateTime.now();
 
-  final todayStart = DateTime(now.year, now.month, now.day);
-  final weekStart = todayStart.subtract(const Duration(days: 6));
-  final weekEnd = todayStart.add(const Duration(days: 1));
+  final todayStart = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  );
+
+  final currentWeekStart = todayStart.subtract(
+    Duration(days: todayStart.weekday - 1),
+  );
+
+  final selectedWeekStart = weekStartDate ?? currentWeekStart;
+
+  final weekStart = DateTime(
+    selectedWeekStart.year,
+    selectedWeekStart.month,
+    selectedWeekStart.day,
+  );
+
+  final weekEnd = weekStart.add(const Duration(days: 7));
 
   final snapshot = await FirebaseFirestore.instance
       .collection("users")
@@ -246,6 +263,7 @@ Future<void> saveUser(UserModel user) async {
         "date",
         isLessThan: Timestamp.fromDate(weekEnd),
       )
+      .orderBy("date")
       .get(const GetOptions(source: Source.server));
 
   final weekData = List<int>.filled(7, 0);
@@ -254,12 +272,14 @@ Future<void> saveUser(UserModel user) async {
     final data = doc.data();
 
     final timestamp = data["date"];
-    if (timestamp == null || timestamp is! Timestamp) continue;
+
+    if (timestamp == null || timestamp is! Timestamp) {
+      continue;
+    }
 
     final mealDate = timestamp.toDate();
-    final mealDay = DateTime(mealDate.year, mealDate.month, mealDate.day);
 
-    final index = mealDay.difference(weekStart).inDays;
+    final index = mealDate.weekday - 1;
 
     if (index >= 0 && index < 7) {
       final caloriesValue = data["calories"] ?? 0;
@@ -271,6 +291,8 @@ Future<void> saveUser(UserModel user) async {
       weekData[index] += calories;
     }
   }
+
   return weekData;
 }
+
 }
