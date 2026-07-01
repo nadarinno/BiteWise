@@ -2,9 +2,10 @@
 import 'package:bitewise/view/plan.dart';
 import 'package:bitewise/view/settings.dart';
 import 'package:bitewise/viewmodel/dashboard_view_model.dart';
-
 import 'package:bitewise/widget/dashboard_section.dart';
+import 'package:bitewise/utils/app_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import 'camera.dart';
@@ -19,6 +20,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  double _navScale = 1.0;
+
   @override
   void initState() {
     super.initState();
@@ -26,6 +29,30 @@ class _HomeScreenState extends State<HomeScreen> {
     Future.microtask(() {
       context.read<DashboardViewModel>().loadDashboard();
     });
+  }
+
+  void _openPage(Widget page) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 350),
+        pageBuilder: (context, animation, secondaryAnimation) => page,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final tween = Tween(
+            begin: const Offset(0.08, 0),
+            end: Offset.zero,
+          ).chain(CurveTween(curve: Curves.easeOutCubic));
+
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -43,20 +70,41 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _header(context, vm),
+                  _header(context, vm)
+                      .animate()
+                      .fadeIn(duration: 500.ms)
+                      .slideY(
+                        begin: -0.25,
+                        curve: Curves.easeOutCubic,
+                      ),
+
                   const SizedBox(height: 28),
-                  const DashboardSection(),
+
+                  const DashboardSection()
+                      .animate()
+                      .fadeIn(delay: 200.ms, duration: 500.ms)
+                      .slideY(
+                        begin: 0.18,
+                        curve: Curves.easeOutCubic,
+                      ),
                 ],
               ),
             ),
           ),
+
           Positioned(
             left: 24,
             right: 24,
             bottom: 18,
             child: SafeArea(
               top: false,
-              child: _homeNavBar(context),
+              child: _homeNavBar(context)
+                  .animate()
+                  .fadeIn(delay: 350.ms, duration: 450.ms)
+                  .slideY(
+                    begin: 1,
+                    curve: Curves.easeOutBack,
+                  ),
             ),
           ),
         ],
@@ -73,35 +121,45 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("BiteWise AI", style: theme.textTheme.headlineLarge),
+              Text(
+                "BiteWise AI",
+                style: theme.textTheme.headlineLarge,
+              ),
+
               const SizedBox(height: 6),
+
               Text.rich(
                 TextSpan(
                   children: [
                     TextSpan(
-                      text: "Welcome back, ",
-                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 18),
+                      text: "${AppText.get(context, 'welcome')} ",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 18,
+                      ),
                     ),
                     TextSpan(
-                      text: vm.userName.isEmpty ? "User" : vm.userName,
+                      text: vm.userName.isEmpty
+                          ? AppText.get(context, 'user')
+                          : vm.userName,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const TextSpan(text: " 👋", style: TextStyle(fontSize: 18)),
+                    const TextSpan(
+                      text: " 👋",
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
         ),
+
         GestureDetector(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            );
+            _openPage(const SettingsScreen());
           },
           child: Container(
             width: 58,
@@ -116,7 +174,13 @@ class _HomeScreenState extends State<HomeScreen> {
               color: theme.colorScheme.onSurface,
               size: 30,
             ),
-          ),
+          )
+              .animate()
+              .scale(
+                duration: 450.ms,
+                curve: Curves.easeOutBack,
+              )
+              .fadeIn(duration: 350.ms),
         ),
       ],
     );
@@ -125,71 +189,64 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _homeNavBar(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      height: 58,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.35),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(
-            context: context,
-            icon: Icons.camera_alt_outlined,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CameraScreen()),
-              );
-            },
-          ),
-          _navItem(
-            context: context,
-            icon: Icons.chat_bubble_outline,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ChatScreen()),
-              );
-            },
-          ),
-          _navItem(
-            context: context,
-            icon: Icons.home_rounded,
-            isSelected: true,
-            isCenter: true,
-            onTap: () {},
-          ),
-          _navItem(
-            context: context,
-            icon: Icons.history_outlined,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HistoryScreen()),
-              );
-            },
-          ),
-          _navItem(
-            context: context,
-            icon: Icons.calendar_month_outlined,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PlanScreen()),
-              );
-            },
-          ),
-        ],
+    return AnimatedScale(
+      scale: _navScale,
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOut,
+      child: Container(
+        height: 58,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurface,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.35),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _navItem(
+              context: context,
+              icon: Icons.camera_alt_outlined,
+              onTap: () {
+                _openPage(const CameraScreen());
+              },
+            ),
+            _navItem(
+              context: context,
+              icon: Icons.chat_bubble_outline,
+              onTap: () {
+                _openPage(const ChatScreen());
+              },
+            ),
+            _navItem(
+              context: context,
+              icon: Icons.home_rounded,
+              isSelected: true,
+              isCenter: true,
+              onTap: () {},
+            ),
+            _navItem(
+              context: context,
+              icon: Icons.history_outlined,
+              onTap: () {
+                _openPage(const HistoryScreen());
+              },
+            ),
+            _navItem(
+              context: context,
+              icon: Icons.calendar_month_outlined,
+              onTap: () {
+                _openPage(const PlanScreen());
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -204,9 +261,25 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
 
     return GestureDetector(
-      onTap: onTap,
+      onTapDown: (_) {
+        setState(() {
+          _navScale = 0.97;
+        });
+      },
+      onTapCancel: () {
+        setState(() {
+          _navScale = 1.0;
+        });
+      },
+      onTapUp: (_) {
+        setState(() {
+          _navScale = 1.0;
+        });
+        onTap();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         width: isCenter ? 48 : 42,
         height: isCenter ? 48 : 42,
         decoration: BoxDecoration(
@@ -220,7 +293,14 @@ class _HomeScreenState extends State<HomeScreen> {
               : theme.scaffoldBackgroundColor,
           size: isCenter ? 27 : 24,
         ),
-      ),
+      )
+          .animate()
+          .fadeIn(duration: 350.ms)
+          .scale(
+            begin: const Offset(0.85, 0.85),
+            duration: 350.ms,
+            curve: Curves.easeOutBack,
+          ),
     );
   }
 }

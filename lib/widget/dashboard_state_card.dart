@@ -1,5 +1,7 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class DashboardStatCard extends StatelessWidget {
   final String title;
@@ -41,39 +43,65 @@ class DashboardStatCard extends StatelessWidget {
               icon,
               size: 54,
               color: theme.colorScheme.onSurface.withOpacity(0.07),
-            ),
+            ).animate().fadeIn(duration: 500.ms).scale(
+                  begin: const Offset(.8, .8),
+                  curve: Curves.easeOutBack,
+                ),
           ),
+
           Row(
             children: [
-              CustomPaint(
-                painter: RingPainter(
-                  progress: safeProgress,
-                  color: theme.colorScheme.primary,
-                  trackColor: theme.dividerColor,
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(
+                  begin: 0,
+                  end: safeProgress,
                 ),
-                child: SizedBox(
-                  width: 82,
-                  height: 82,
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FittedBox(
-                          child: Text(
-                            "$value",
-                            style: theme.textTheme.titleLarge,
-                          ),
-                        ),
-                        Text(
-                          "kcal",
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.easeOutCubic,
+                builder: (context, animatedProgress, child) {
+                  return CustomPaint(
+                    painter: RingPainter(
+                      progress: animatedProgress,
+                      color: theme.colorScheme.primary,
+                      trackColor: theme.dividerColor,
                     ),
+                    child: SizedBox(
+                      width: 82,
+                      height: 82,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TweenAnimationBuilder<int>(
+                              tween: IntTween(begin: 0, end: value),
+                              duration: const Duration(milliseconds: 900),
+                              curve: Curves.easeOutCubic,
+                              builder: (context, animatedValue, child) {
+                                return FittedBox(
+                                  child: Text(
+                                    "$animatedValue",
+                                    style: theme.textTheme.titleLarge,
+                                  ),
+                                );
+                              },
+                            ),
+                            Text(
+                              "kcal",
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ).animate().fadeIn(duration: 450.ms).scale(
+                    begin: const Offset(.9, .9),
+                    curve: Curves.easeOutBack,
                   ),
-                ),
-              ),
+
               const SizedBox(width: 18),
+
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -103,12 +131,18 @@ class DashboardStatCard extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
+              ).animate(delay: 120.ms).fadeIn(duration: 450.ms).slideX(
+                    begin: .12,
+                    curve: Curves.easeOutCubic,
+                  ),
             ],
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 450.ms).slideY(
+          begin: .12,
+          curve: Curves.easeOutCubic,
+        );
   }
 }
 

@@ -1,8 +1,9 @@
-
 import 'package:bitewise/viewmodel/chat_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../model/chatmessages_model.dart';
+import 'package:bitewise/utils/app_text.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -44,7 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "AI Assistant",
+          AppText.get(context, 'aiAssistant'),
           style: theme.textTheme.titleLarge,
         ),
       ),
@@ -92,13 +93,12 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
 
           Container(
-            
             padding: EdgeInsets.fromLTRB(
-    10,
-    10,
-    10,
-    isKeyboardOpen ? 10 : 50,
-  ),
+              10,
+              10,
+              10,
+              isKeyboardOpen ? 10 : 50,
+            ),
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
               border: Border(
@@ -111,8 +111,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: TextField(
                     controller: controller,
                     style: theme.textTheme.bodyLarge,
-                    decoration: const InputDecoration(
-                      hintText: "Type a message...",
+                    decoration: InputDecoration(
+                      hintText: AppText.get(context, 'typeMessage'),
                     ),
                   ),
                 ),
@@ -196,7 +196,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Text(
-          "AI is typing...",
+          AppText.get(context, 'aiTyping'),
           style: theme.textTheme.bodyMedium,
         ),
       ),

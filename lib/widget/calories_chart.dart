@@ -1,6 +1,8 @@
 
+import 'package:bitewise/utils/app_text.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class CaloriesChartModern extends StatelessWidget {
   final List<int> calories;
@@ -49,9 +51,9 @@ class CaloriesChartModern extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Weekly Calories",
+            AppText.get(context, 'weeklyCalories'),
             style: theme.textTheme.titleLarge,
-          ),
+          ).animate().fadeIn(duration: 450.ms).slideY(begin: .2),
 
           const SizedBox(height: 18),
 
@@ -65,30 +67,29 @@ class CaloriesChartModern extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
+
               const SizedBox(width: 8),
+
               Expanded(
                 child: Text(
-                  "Goal ($goal kcal)",
+                  "${AppText.get(context, 'goal')} ($goal ${AppText.get(context, 'kcal')})",
                   style: theme.textTheme.bodyMedium,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
-          ),
+          ).animate(delay: 120.ms).fadeIn(duration: 400.ms).slideX(begin: -.12),
 
           const SizedBox(height: 18),
 
           SizedBox(
             height: 280,
-
-            
             child: BarChart(
               BarChartData(
                 minY: 0,
                 maxY: maxY,
                 alignment: BarChartAlignment.spaceAround,
                 borderData: FlBorderData(show: false),
-
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
@@ -100,7 +101,6 @@ class CaloriesChartModern extends StatelessWidget {
                     );
                   },
                 ),
-
                 extraLinesData: ExtraLinesData(
                   horizontalLines: [
                     HorizontalLine(
@@ -111,7 +111,6 @@ class CaloriesChartModern extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 titlesData: FlTitlesData(
                   topTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
@@ -143,14 +142,14 @@ class CaloriesChartModern extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 28,
                       getTitlesWidget: (value, meta) {
-                        const days = [
-                          "M",
-                          "T",
-                          "W",
-                          "T",
-                          "F",
-                          "S",
-                          "S",
+                        final days = [
+                          AppText.get(context, 'monday'),
+                          AppText.get(context, 'tuesday'),
+                          AppText.get(context, 'wednesday'),
+                          AppText.get(context, 'thursday'),
+                          AppText.get(context, 'friday'),
+                          AppText.get(context, 'saturday'),
+                          AppText.get(context, 'sunday'),
                         ];
 
                         final index = value.toInt();
@@ -173,7 +172,6 @@ class CaloriesChartModern extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 barTouchData: BarTouchData(
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(
@@ -184,7 +182,7 @@ class CaloriesChartModern extends StatelessWidget {
                     ),
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       return BarTooltipItem(
-                        "${rod.toY.toInt()} kcal",
+                        "${rod.toY.toInt()} ${AppText.get(context, 'kcal')}",
                         TextStyle(
                           color: theme.colorScheme.onSurface,
                           fontSize: 12,
@@ -194,7 +192,6 @@ class CaloriesChartModern extends StatelessWidget {
                     },
                   ),
                 ),
-
                 barGroups: List.generate(7, (i) {
                   final value = safeCalories[i];
 
@@ -222,12 +219,16 @@ class CaloriesChartModern extends StatelessWidget {
                   );
                 }),
               ),
-              swapAnimationDuration: Duration.zero,
+              swapAnimationDuration: const Duration(milliseconds: 900),
+              swapAnimationCurve: Curves.easeOutCubic,
             ),
-          ),
+          ).animate(delay: 220.ms).fadeIn(duration: 500.ms).slideY(begin: .15),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 450.ms).scale(
+          begin: const Offset(.97, .97),
+          curve: Curves.easeOutCubic,
+        );
   }
 
   Widget _axisText(BuildContext context, String text) {

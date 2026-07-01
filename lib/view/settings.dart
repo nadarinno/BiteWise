@@ -1,14 +1,19 @@
+
 import 'dart:io';
+
+import 'package:bitewise/utils/app_text.dart';
 import 'package:bitewise/view/deleteaccount.dart';
 import 'package:bitewise/view/login.dart';
 import 'package:bitewise/viewmodel/auth_view_model.dart';
 import 'package:bitewise/viewmodel/dashboard_view_model.dart';
+import 'package:bitewise/viewmodel/language_view_model.dart';
 import 'package:bitewise/viewmodel/setting_view_model.dart';
 import 'package:bitewise/viewmodel/theme_view_model.dart';
-
+import 'package:bitewise/widget/language_switcher.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -67,30 +72,96 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _logout() async {
-  await context.read<AuthViewModel>().logout();
+    await context.read<AuthViewModel>().logout();
+  if (!context.mounted) return;
 
-  if (!mounted) return;
+  context.read<LanguageViewModel>().resetToDefault();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen()),
+      (route) => false,
+    );
+  }
 
-  Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(
-      builder: (_) => LoginScreen(),
-    ),
-    (route) => false,
-  );
-}
+  Route _fadeSlideRoute(Widget page) {
+    return PageRouteBuilder(
+      transitionDuration: const Duration(milliseconds: 350),
+      pageBuilder: (_, animation, secondaryAnimation) => page,
+      transitionsBuilder: (_, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.08, 0),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              ),
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _saveSettings(SettingsViewModel vm) async {
+    if (name.text.trim().isEmpty ||
+        age.text.trim().isEmpty ||
+        height.text.trim().isEmpty ||
+        weight.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppText.get(context, 'fillRequiredFields')),
+        ),
+      );
+      return;
+    }
+
+    try {
+      await vm.updateProfile(
+        name: name.text.trim(),
+        age: int.parse(age.text.trim()),
+        height: double.parse(height.text.trim()),
+        weight: double.parse(weight.text.trim()),
+        disease: disease.text.trim(),
+        gender: selectedGender,
+        activityLevel: selectedActivityLevel,
+        goal: selectedGoal,
+      );
+
+      await context.read<DashboardViewModel>().loadDashboard();
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppText.get(context, 'updated')),
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("${AppText.get(context, 'error')}: $e"),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.read<SettingsViewModel>();
-    context.read<ThemeViewModel>();
     final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "Settings",
+          AppText.get(context, 'settings'),
           style: theme.textTheme.titleLarge,
         ),
       ),
@@ -123,24 +194,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       )
                     : null,
               ),
-            ),
+            ).animate().fadeIn(duration: 450.ms).scale(
+                  curve: Curves.easeOutBack,
+                ),
 
             const SizedBox(height: 24),
 
-            _input(context, name, "Name"),
-            _input(context, age, "Age", isNumber: true),
-            _input(context, height, "Height (cm)", isNumber: true),
-            _input(context, weight, "Weight (kg)", isNumber: true),
-            _input(context, disease, "Disease (optional)"),
+            _input(context, name, AppText.get(context, 'name'))
+                .animate(delay: 80.ms)
+                .fadeIn()
+                .slideX(begin: -.12),
+
+            _input(
+              context,
+              age,
+              AppText.get(context, 'age'),
+              isNumber: true,
+            ).animate(delay: 140.ms).fadeIn().slideX(begin: .12),
+
+            _input(
+              context,
+              height,
+              AppText.get(context, 'heightCm'),
+              isNumber: true,
+            ).animate(delay: 200.ms).fadeIn().slideX(begin: -.12),
+
+            _input(
+              context,
+              weight,
+              AppText.get(context, 'weightKg'),
+              isNumber: true,
+            ).animate(delay: 260.ms).fadeIn().slideX(begin: .12),
+
+            _input(
+              context,
+              disease,
+              AppText.get(context, 'diseaseOptional'),
+            ).animate(delay: 320.ms).fadeIn().slideX(begin: -.12),
 
             const SizedBox(height: 20),
 
-            _sectionTitle(context, "Gender"),
+            _sectionTitle(context, AppText.get(context, 'gender'))
+                .animate(delay: 380.ms)
+                .fadeIn()
+                .slideY(begin: .15),
+
             Row(
               children: [
                 _optionButton(
                   context: context,
-                  text: "Female",
+                  text: AppText.get(context, 'female'),
                   value: "female",
                   selectedValue: selectedGender,
                   onTap: () => setState(() => selectedGender = "female"),
@@ -148,22 +251,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 10),
                 _optionButton(
                   context: context,
-                  text: "Male",
+                  text: AppText.get(context, 'male'),
                   value: "male",
                   selectedValue: selectedGender,
                   onTap: () => setState(() => selectedGender = "male"),
                 ),
               ],
-            ),
+            ).animate(delay: 420.ms).fadeIn().slideY(begin: .15),
 
             const SizedBox(height: 20),
 
-            _sectionTitle(context, "Activity Level"),
+            _sectionTitle(context, AppText.get(context, 'activityLevel'))
+                .animate(delay: 480.ms)
+                .fadeIn()
+                .slideY(begin: .15),
+
             Row(
               children: [
                 _optionButton(
                   context: context,
-                  text: "Sedentary",
+                  text: AppText.get(context, 'sedentary'),
                   value: "sedentary",
                   selectedValue: selectedActivityLevel,
                   onTap: () =>
@@ -172,13 +279,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 10),
                 _optionButton(
                   context: context,
-                  text: "Light",
+                  text: AppText.get(context, 'light'),
                   value: "light",
                   selectedValue: selectedActivityLevel,
                   onTap: () => setState(() => selectedActivityLevel = "light"),
                 ),
               ],
-            ),
+            ).animate(delay: 520.ms).fadeIn().slideY(begin: .15),
 
             const SizedBox(height: 10),
 
@@ -186,7 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 _optionButton(
                   context: context,
-                  text: "Moderate",
+                  text: AppText.get(context, 'moderate'),
                   value: "moderate",
                   selectedValue: selectedActivityLevel,
                   onTap: () =>
@@ -195,23 +302,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 10),
                 _optionButton(
                   context: context,
-                  text: "Very Active",
+                  text: AppText.get(context, 'veryActive'),
                   value: "very_active",
                   selectedValue: selectedActivityLevel,
                   onTap: () =>
                       setState(() => selectedActivityLevel = "very_active"),
                 ),
               ],
-            ),
+            ).animate(delay: 580.ms).fadeIn().slideY(begin: .15),
 
             const SizedBox(height: 20),
 
-            _sectionTitle(context, "Goal"),
+            _sectionTitle(context, AppText.get(context, 'goal'))
+                .animate(delay: 640.ms)
+                .fadeIn()
+                .slideY(begin: .15),
+
             Row(
               children: [
                 _optionButton(
                   context: context,
-                  text: "Lose",
+                  text: AppText.get(context, 'lose'),
                   value: "lose",
                   selectedValue: selectedGoal,
                   onTap: () => setState(() => selectedGoal = "lose"),
@@ -219,7 +330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 10),
                 _optionButton(
                   context: context,
-                  text: "Maintain",
+                  text: AppText.get(context, 'maintain'),
                   value: "maintain",
                   selectedValue: selectedGoal,
                   onTap: () => setState(() => selectedGoal = "maintain"),
@@ -227,73 +338,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 10),
                 _optionButton(
                   context: context,
-                  text: "Gain",
+                  text: AppText.get(context, 'gain'),
                   value: "gain",
                   selectedValue: selectedGoal,
                   onTap: () => setState(() => selectedGoal = "gain"),
                 ),
               ],
-            ),
+            ).animate(delay: 680.ms).fadeIn().slideY(begin: .15),
 
             const SizedBox(height: 24),
-
-    
 
             Consumer<ThemeViewModel>(
-  builder: (context, themeVm, child) {
-    final theme = Theme.of(context);
+              builder: (context, themeVm, child) {
+                final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: 
-      SwitchListTile(
-  title: const Text("Dark Mode"),
-  value: themeVm.isDark,
-  onChanged: (value) {
-    themeVm.setTheme(value);
-  },
-)
-    );
-  },
-),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: theme.dividerColor),
+                  ),
+                  child: SwitchListTile(
+                    title: Text(AppText.get(context, 'darkMode')),
+                    value: themeVm.isDark,
+                    onChanged: (value) {
+                      themeVm.setTheme(value);
+                    },
+                  ),
+                );
+              },
+            ).animate(delay: 740.ms).fadeIn().slideY(begin: .15),
+
+            const SizedBox(height: 16),
+
+            const LanguageSwitcher()
+                .animate(delay: 800.ms)
+                .fadeIn()
+                .slideY(begin: .15),
 
             const SizedBox(height: 24),
 
-            ElevatedButton(
-              onPressed: () async {
-                await vm.updateProfile(
-                  name: name.text.trim(),
-                  age: int.parse(age.text.trim()),
-                  height: double.parse(height.text.trim()),
-                  weight: double.parse(weight.text.trim()),
-                  disease: disease.text.trim(),
-                  gender: selectedGender,
-                  activityLevel: selectedActivityLevel,
-                  goal: selectedGoal,
-                );
-
-                await context.read<DashboardViewModel>().loadDashboard();
-
-                if (!context.mounted) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Updated")),
-                );
-
-                Navigator.pop(context);
-              },
-              child: const Text(
-                "Save Changes",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () => _saveSettings(vm),
+                child: Text(
+                  AppText.get(context, 'saveChanges'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-            ),
+            ).animate(delay: 860.ms).fadeIn().scale(
+                  begin: const Offset(.96, .96),
+                ),
 
             const SizedBox(height: 16),
 
@@ -304,14 +404,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 side: BorderSide(color: theme.dividerColor),
                 minimumSize: const Size(double.infinity, 56),
               ),
-              child: const Text(
-                "Logout",
-                style: TextStyle(
+              child: Text(
+                AppText.get(context, 'logout'),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
+            ).animate(delay: 920.ms).fadeIn().slideY(begin: .15),
 
             const SizedBox(height: 16),
 
@@ -319,9 +419,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const DeleteAccountScreen(),
-                  ),
+                  _fadeSlideRoute(const DeleteAccountScreen()),
                 );
               },
               style: OutlinedButton.styleFrom(
@@ -329,18 +427,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 side: const BorderSide(color: Colors.red),
                 minimumSize: const Size(double.infinity, 56),
               ),
-              child: const Text(
-                "Delete Account",
-                style: TextStyle(
+              child: Text(
+                AppText.get(context, 'deleteAccount'),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-              const SizedBox(height: 30),
-          ],
+            ).animate(delay: 980.ms).fadeIn().slideY(begin: .15),
 
-          
+            const SizedBox(height: 30),
+          ],
         ),
       ),
     );
@@ -350,7 +447,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final theme = Theme.of(context);
 
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Text(
@@ -374,7 +471,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
@@ -387,14 +486,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           child: Center(
-            child: Text(
-              text,
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 color: isSelected
                     ? theme.colorScheme.onPrimary
                     : theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
+              child: Text(text),
             ),
           ),
         ),

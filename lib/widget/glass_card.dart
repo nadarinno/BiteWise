@@ -1,5 +1,7 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class GlassCard extends StatelessWidget {
   final Widget child;
@@ -18,7 +20,10 @@ class GlassCard extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        filter: ImageFilter.blur(
+          sigmaX: 18,
+          sigmaY: 18,
+        ),
         child: Container(
           width: double.infinity,
           padding: padding,
@@ -39,6 +44,22 @@ class GlassCard extends StatelessWidget {
           child: child,
         ),
       ),
-    );
+    )
+
+
+        .animate()
+        .fadeIn(
+          duration: 450.ms,
+        )
+        .slideY(
+          begin: .12,
+          duration: 450.ms,
+          curve: Curves.easeOutCubic,
+        )
+        .scale(
+          begin: const Offset(.97, .97),
+          duration: 450.ms,
+          curve: Curves.easeOutCubic,
+        );
   }
 }

@@ -1,7 +1,10 @@
+
+import 'package:bitewise/utils/app_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class SummaryBar extends StatelessWidget {
- final int weeklyGoal;
+  final int weeklyGoal;
   final int totalCalories;
   final int highestintake;
   final int streak;
@@ -32,47 +35,56 @@ class SummaryBar extends StatelessWidget {
               Expanded(
                 child: SummaryItem(
                   icon: Icons.track_changes,
-                  title: "WeeklyGoal",
+                  title: AppText.get(context, 'weeklyGoal'),
                   value: "$weeklyGoal",
-                  unit: "kcal",
-                ),
+                  unit: AppText.get(context, 'kcal'),
+                ).animate(delay: 100.ms).fadeIn().slideX(begin: -.12),
               ),
+
               const SizedBox(width: 10),
+
               Expanded(
                 child: SummaryItem(
                   icon: Icons.local_fire_department,
-                  title: "Total",
+                  title: AppText.get(context, 'total'),
                   value: "$totalCalories",
-                  unit: "kcal",
-                ),
+                  unit: AppText.get(context, 'kcal'),
+                ).animate(delay: 180.ms).fadeIn().slideX(begin: .12),
               ),
             ],
           ),
+
           const SizedBox(height: 10),
+
           Row(
             children: [
               Expanded(
                 child: SummaryItem(
                   icon: Icons.rocket_launch_outlined,
-                  title: "Highest Intake",
+                  title: AppText.get(context, 'highestIntake'),
                   value: "$highestintake",
-                  unit: "kcal",
-                ),
+                  unit: AppText.get(context, 'kcal'),
+                ).animate(delay: 260.ms).fadeIn().slideX(begin: -.12),
               ),
+
               const SizedBox(width: 10),
+
               Expanded(
                 child: SummaryItem(
                   icon: Icons.calendar_month,
-                  title: "Streak",
+                  title: AppText.get(context, 'streak'),
                   value: "$streak",
-                  unit: "days",
-                ),
+                  unit: AppText.get(context, 'days'),
+                ).animate(delay: 340.ms).fadeIn().slideX(begin: .12),
               ),
             ],
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 450.ms).scale(
+          begin: const Offset(.97, .97),
+          curve: Curves.easeOutCubic,
+        );
   }
 }
 
@@ -116,8 +128,13 @@ class SummaryItem extends StatelessWidget {
               color: theme.colorScheme.primary,
               size: 21,
             ),
-          ),
+          ).animate().scale(
+                duration: 350.ms,
+                curve: Curves.easeOutBack,
+              ),
+
           const SizedBox(width: 10),
+
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -131,10 +148,12 @@ class SummaryItem extends StatelessWidget {
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
+
                 const SizedBox(height: 3),
+
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
+                  alignment: AlignmentDirectional.centerStart,
                   child: RichText(
                     text: TextSpan(
                       children: [

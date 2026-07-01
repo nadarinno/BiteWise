@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
@@ -41,19 +42,49 @@ Future<void> logout() async {
     }
   }
 
+
   Future<bool> _handleAuth(Future Function() action) async {
-    try {
-      _setLoading(true);
-      error = null;
-      await action();
-      return true;
-    } catch (e) {
-      error = e.toString();
-      return false;
-    } finally {
-      _setLoading(false);
+  try {
+    _setLoading(true);
+    error = null;
+
+    await action();
+
+    return true;
+  } on FirebaseAuthException catch (e) {
+    switch (e.code) {
+      case "wrong-password":
+  error = "Incorrect password";
+  break;
+
+case "invalid-credential":
+  error = "Invalid email or password";
+  break;
+
+      case "user-not-found":
+        error = "No account found with this email";
+        break;
+
+      case "invalid-email":
+        error = "Invalid email address";
+        break;
+
+      case "email-already-in-use":
+        error = "Email already exists";
+        break;
+
+      default:
+        error = "Authentication failed";
     }
+
+    return false;
+  } catch (_) {
+    error = "Something went wrong";
+    return false;
+  } finally {
+    _setLoading(false);
   }
+}
 
   void _setLoading(bool value) {
     isLoading = value;

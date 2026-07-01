@@ -1,9 +1,14 @@
 
+
 import 'dart:io';
+
+import 'package:bitewise/utils/app_text.dart';
+import 'package:bitewise/viewmodel/language_view_model.dart';
+import 'package:bitewise/viewmodel/nutrition_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/nutrition_view_model.dart';
+
 import 'result.dart';
 
 class CameraScreen extends StatelessWidget {
@@ -13,23 +18,32 @@ class CameraScreen extends StatelessWidget {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: source);
 
+    if (!context.mounted) return;
     if (image == null) return;
 
     final file = File(image.path);
+
     final mealType = await _selectMealType(context);
 
+    if (!context.mounted) return;
     if (mealType == null) return;
+
+    final languageCode =
+        context.read<LanguageViewModel>().locale.languageCode;
 
     await context.read<NutritionViewModel>().analyzeImage(
           file,
           mealType: mealType,
+          languageCode: languageCode,
         );
 
     if (!context.mounted) return;
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const ResultScreen()),
+      MaterialPageRoute(
+        builder: (_) => const ResultScreen(),
+      ),
     );
   }
 
@@ -40,49 +54,46 @@ class CameraScreen extends StatelessWidget {
       context: context,
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(24),
+        ),
       ),
-      builder: (_) {
+      builder: (sheetContext) {
         return Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "Select Meal Type",
+                AppText.get(sheetContext, 'selectMealType'),
                 style: theme.textTheme.titleLarge,
               ),
-
               const SizedBox(height: 20),
-
               _mealOption(
-                context,
-                title: "Breakfast",
+                sheetContext,
+                title: AppText.get(sheetContext, 'breakfast'),
                 icon: Icons.wb_sunny,
                 value: "breakfast",
               ),
-
               _mealOption(
-                context,
-                title: "Lunch",
+                sheetContext,
+                title: AppText.get(sheetContext, 'lunch'),
                 icon: Icons.lunch_dining,
                 value: "lunch",
               ),
-
               _mealOption(
-                context,
-                title: "Dinner",
+                sheetContext,
+                title: AppText.get(sheetContext, 'dinner'),
                 icon: Icons.dinner_dining,
                 value: "dinner",
               ),
-
               _mealOption(
-                context,
-                title: "Snack",
+                sheetContext,
+                title: AppText.get(sheetContext, 'snack'),
                 icon: Icons.apple,
                 value: "snack",
               ),
-                const SizedBox(height: 30),
+              const SizedBox(height: 40),
             ],
           ),
         );
@@ -125,7 +136,7 @@ class CameraScreen extends StatelessWidget {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "Food Scanner",
+          AppText.get(context, 'foodScanner'),
           style: theme.textTheme.titleLarge,
         ),
       ),
@@ -143,7 +154,9 @@ class CameraScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surface,
                         shape: BoxShape.circle,
-                        border: Border.all(color: theme.dividerColor),
+                        border: Border.all(
+                          color: theme.dividerColor,
+                        ),
                       ),
                       child: Icon(
                         Icons.fastfood,
@@ -151,39 +164,48 @@ class CameraScreen extends StatelessWidget {
                         color: theme.colorScheme.primary,
                       ),
                     ),
-
                     const SizedBox(height: 30),
-
                     ElevatedButton.icon(
-                      onPressed: () {
-                        _pickImage(context, ImageSource.camera);
-                      },
+                      onPressed: vm.isLoading
+                          ? null
+                          : () {
+                              _pickImage(
+                                context,
+                                ImageSource.camera,
+                              );
+                            },
                       icon: const Icon(Icons.camera_alt),
-                      label: const Text(
-                        "Take Photo",
-                        style: TextStyle(
+                      label: Text(
+                        AppText.get(context, 'takePhoto'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 15),
-
                     OutlinedButton.icon(
-                      onPressed: () {
-                        _pickImage(context, ImageSource.gallery);
-                      },
+                      onPressed: vm.isLoading
+                          ? null
+                          : () {
+                              _pickImage(
+                                context,
+                                ImageSource.gallery,
+                              );
+                            },
                       icon: const Icon(Icons.photo_library),
-                      label: const Text(
-                        "Upload From Gallery",
-                        style: TextStyle(
+                      label: Text(
+                        AppText.get(context, 'uploadFromGallery'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 56),
+                        minimumSize: const Size(
+                          double.infinity,
+                          56,
+                        ),
                       ),
                     ),
                   ],
