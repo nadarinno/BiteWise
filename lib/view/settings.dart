@@ -1,7 +1,10 @@
 
+
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:bitewise/utils/app_text.dart';
+import 'package:bitewise/utils/app_theme.dart';
 import 'package:bitewise/view/deleteaccount.dart';
 import 'package:bitewise/view/login.dart';
 import 'package:bitewise/viewmodel/auth_view_model.dart';
@@ -9,7 +12,6 @@ import 'package:bitewise/viewmodel/dashboard_view_model.dart';
 import 'package:bitewise/viewmodel/language_view_model.dart';
 import 'package:bitewise/viewmodel/setting_view_model.dart';
 import 'package:bitewise/viewmodel/theme_view_model.dart';
-import 'package:bitewise/widget/language_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
@@ -73,9 +75,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _logout() async {
     await context.read<AuthViewModel>().logout();
-  if (!context.mounted) return;
 
-  context.read<LanguageViewModel>().resetToDefault();
+    if (!context.mounted) return;
+
+    context.read<LanguageViewModel>().resetToDefault();
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => LoginScreen()),
@@ -156,288 +160,414 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final vm = context.read<SettingsViewModel>();
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(
           AppText.get(context, 'settings'),
-          style: theme.textTheme.titleLarge,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+           colors: AppTheme.backgroundGradientColors(isDark),
+          ),
+        ),
+        child: Stack(
           children: [
-            GestureDetector(
-              onTap: () async {
-                final image = await ImagePicker().pickImage(
-                  source: ImageSource.gallery,
-                );
-
-                if (image != null) {
-                  await vm.updateProfileImage(File(image.path));
-                  await loadData();
-                }
-              },
-              child: CircleAvatar(
-                radius: 44,
-                backgroundColor: theme.colorScheme.surface,
-                backgroundImage: data?["profileImage"] != null
-                    ? NetworkImage(data!["profileImage"])
-                    : null,
-                child: data?["profileImage"] == null
-                    ? Icon(
-                        Icons.person,
-                        size: 42,
-                        color: theme.colorScheme.primary,
-                      )
-                    : null,
+            Positioned(
+              top: -80,
+              left: -60,
+              child: _blurCircle(
+                color: theme.colorScheme.primary.withOpacity(0.30),
+                size: 200,
               ),
-            ).animate().fadeIn(duration: 450.ms).scale(
-                  curve: Curves.easeOutBack,
-                ),
+            ),
+            Positioned(
+              top: 180,
+              right: -70,
+              child: _blurCircle(
+                color: Colors.purple.withOpacity(isDark ? 0.22 : 0.18),
+                size: 190,
+              ),
+            ),
+            Positioned(
+              bottom: -90,
+              left: 30,
+              child: _blurCircle(
+                color: Colors.cyan.withOpacity(isDark ? 0.16 : 0.22),
+                size: 190,
+              ),
+            ),
 
-            const SizedBox(height: 24),
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        final image = await ImagePicker().pickImage(
+                          source: ImageSource.gallery,
+                        );
 
-            _input(context, name, AppText.get(context, 'name'))
-                .animate(delay: 80.ms)
-                .fadeIn()
-                .slideX(begin: -.12),
+                        if (image != null) {
+                          await vm.updateProfileImage(File(image.path));
+                          await loadData();
+                        }
+                      },
+                      child: _glassBox(
+                        context: context,
+                        width: 108,
+                        height: 108,
+                        padding: const EdgeInsets.all(8),
+                        borderRadius: BorderRadius.circular(36),
+                        child: CircleAvatar(
+                          radius: 44,
+                          backgroundColor:
+                              Colors.white.withOpacity(isDark ? 0.08 : 0.35),
+                          backgroundImage: data?["profileImage"] != null
+                              ? NetworkImage(data!["profileImage"])
+                              : null,
+                          child: data?["profileImage"] == null
+                              ? Icon(
+                                  Icons.person,
+                                  size: 42,
+                                  color: theme.colorScheme.primary,
+                                )
+                              : null,
+                        ),
+                      ),
+                    ).animate().fadeIn(duration: 450.ms).scale(
+                          curve: Curves.easeOutBack,
+                        ),
 
-            _input(
-              context,
-              age,
-              AppText.get(context, 'age'),
-              isNumber: true,
-            ).animate(delay: 140.ms).fadeIn().slideX(begin: .12),
+                    const SizedBox(height: 24),
 
-            _input(
-              context,
-              height,
-              AppText.get(context, 'heightCm'),
-              isNumber: true,
-            ).animate(delay: 200.ms).fadeIn().slideX(begin: -.12),
+                    _input(
+                      context,
+                      name,
+                      AppText.get(context, 'name'),
+                      icon: Icons.person_outline_rounded,
+                    ).animate(delay: 80.ms).fadeIn().slideX(begin: -.12),
 
-            _input(
-              context,
-              weight,
-              AppText.get(context, 'weightKg'),
-              isNumber: true,
-            ).animate(delay: 260.ms).fadeIn().slideX(begin: .12),
+                    _input(
+                      context,
+                      age,
+                      AppText.get(context, 'age'),
+                      icon: Icons.cake_outlined,
+                      isNumber: true,
+                    ).animate(delay: 140.ms).fadeIn().slideX(begin: .12),
 
-            _input(
-              context,
-              disease,
-              AppText.get(context, 'diseaseOptional'),
-            ).animate(delay: 320.ms).fadeIn().slideX(begin: -.12),
+                    _input(
+                      context,
+                      height,
+                      AppText.get(context, 'heightCm'),
+                      icon: Icons.height_rounded,
+                      isNumber: true,
+                    ).animate(delay: 200.ms).fadeIn().slideX(begin: -.12),
 
-            const SizedBox(height: 20),
+                    _input(
+                      context,
+                      weight,
+                      AppText.get(context, 'weightKg'),
+                      icon: Icons.monitor_weight_outlined,
+                      isNumber: true,
+                    ).animate(delay: 260.ms).fadeIn().slideX(begin: .12),
 
-            _sectionTitle(context, AppText.get(context, 'gender'))
-                .animate(delay: 380.ms)
-                .fadeIn()
-                .slideY(begin: .15),
+                    _input(
+                      context,
+                      disease,
+                      AppText.get(context, 'diseaseOptional'),
+                      icon: Icons.medical_information_outlined,
+                    ).animate(delay: 320.ms).fadeIn().slideX(begin: -.12),
 
-            Row(
-              children: [
-                _optionButton(
-                  context: context,
-                  text: AppText.get(context, 'female'),
-                  value: "female",
-                  selectedValue: selectedGender,
-                  onTap: () => setState(() => selectedGender = "female"),
-                ),
-                const SizedBox(width: 10),
-                _optionButton(
-                  context: context,
-                  text: AppText.get(context, 'male'),
-                  value: "male",
-                  selectedValue: selectedGender,
-                  onTap: () => setState(() => selectedGender = "male"),
-                ),
-              ],
-            ).animate(delay: 420.ms).fadeIn().slideY(begin: .15),
+                    const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+                    _sectionTitle(context, AppText.get(context, 'gender'))
+                        .animate(delay: 380.ms)
+                        .fadeIn()
+                        .slideY(begin: .15),
 
-            _sectionTitle(context, AppText.get(context, 'activityLevel'))
-                .animate(delay: 480.ms)
-                .fadeIn()
-                .slideY(begin: .15),
+                    Row(
+                      children: [
+                        _optionButton(
+                          context: context,
+                          text: AppText.get(context, 'female'),
+                          value: "female",
+                          selectedValue: selectedGender,
+                          onTap: () => setState(() => selectedGender = "female"),
+                        ),
+                        const SizedBox(width: 10),
+                        _optionButton(
+                          context: context,
+                          text: AppText.get(context, 'male'),
+                          value: "male",
+                          selectedValue: selectedGender,
+                          onTap: () => setState(() => selectedGender = "male"),
+                        ),
+                      ],
+                    ).animate(delay: 420.ms).fadeIn().slideY(begin: .15),
 
-            Row(
-              children: [
-                _optionButton(
-                  context: context,
-                  text: AppText.get(context, 'sedentary'),
-                  value: "sedentary",
-                  selectedValue: selectedActivityLevel,
-                  onTap: () =>
-                      setState(() => selectedActivityLevel = "sedentary"),
-                ),
-                const SizedBox(width: 10),
-                _optionButton(
-                  context: context,
-                  text: AppText.get(context, 'light'),
-                  value: "light",
-                  selectedValue: selectedActivityLevel,
-                  onTap: () => setState(() => selectedActivityLevel = "light"),
-                ),
-              ],
-            ).animate(delay: 520.ms).fadeIn().slideY(begin: .15),
+                    const SizedBox(height: 20),
 
-            const SizedBox(height: 10),
+                    _sectionTitle(context, AppText.get(context, 'activityLevel'))
+                        .animate(delay: 480.ms)
+                        .fadeIn()
+                        .slideY(begin: .15),
 
-            Row(
-              children: [
-                _optionButton(
-                  context: context,
-                  text: AppText.get(context, 'moderate'),
-                  value: "moderate",
-                  selectedValue: selectedActivityLevel,
-                  onTap: () =>
-                      setState(() => selectedActivityLevel = "moderate"),
-                ),
-                const SizedBox(width: 10),
-                _optionButton(
-                  context: context,
-                  text: AppText.get(context, 'veryActive'),
-                  value: "very_active",
-                  selectedValue: selectedActivityLevel,
-                  onTap: () =>
-                      setState(() => selectedActivityLevel = "very_active"),
-                ),
-              ],
-            ).animate(delay: 580.ms).fadeIn().slideY(begin: .15),
+                    Row(
+                      children: [
+                        _optionButton(
+                          context: context,
+                          text: AppText.get(context, 'sedentary'),
+                          value: "sedentary",
+                          selectedValue: selectedActivityLevel,
+                          onTap: () => setState(
+                            () => selectedActivityLevel = "sedentary",
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        _optionButton(
+                          context: context,
+                          text: AppText.get(context, 'light'),
+                          value: "light",
+                          selectedValue: selectedActivityLevel,
+                          onTap: () => setState(
+                            () => selectedActivityLevel = "light",
+                          ),
+                        ),
+                      ],
+                    ).animate(delay: 520.ms).fadeIn().slideY(begin: .15),
 
-            const SizedBox(height: 20),
+                    const SizedBox(height: 10),
 
-            _sectionTitle(context, AppText.get(context, 'goal'))
-                .animate(delay: 640.ms)
-                .fadeIn()
-                .slideY(begin: .15),
+                    Row(
+                      children: [
+                        _optionButton(
+                          context: context,
+                          text: AppText.get(context, 'moderate'),
+                          value: "moderate",
+                          selectedValue: selectedActivityLevel,
+                          onTap: () => setState(
+                            () => selectedActivityLevel = "moderate",
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        _optionButton(
+                          context: context,
+                          text: AppText.get(context, 'veryActive'),
+                          value: "very_active",
+                          selectedValue: selectedActivityLevel,
+                          onTap: () => setState(
+                            () => selectedActivityLevel = "very_active",
+                          ),
+                        ),
+                      ],
+                    ).animate(delay: 580.ms).fadeIn().slideY(begin: .15),
 
-            Row(
-              children: [
-                _optionButton(
-                  context: context,
-                  text: AppText.get(context, 'lose'),
-                  value: "lose",
-                  selectedValue: selectedGoal,
-                  onTap: () => setState(() => selectedGoal = "lose"),
-                ),
-                const SizedBox(width: 10),
-                _optionButton(
-                  context: context,
-                  text: AppText.get(context, 'maintain'),
-                  value: "maintain",
-                  selectedValue: selectedGoal,
-                  onTap: () => setState(() => selectedGoal = "maintain"),
-                ),
-                const SizedBox(width: 10),
-                _optionButton(
-                  context: context,
-                  text: AppText.get(context, 'gain'),
-                  value: "gain",
-                  selectedValue: selectedGoal,
-                  onTap: () => setState(() => selectedGoal = "gain"),
-                ),
-              ],
-            ).animate(delay: 680.ms).fadeIn().slideY(begin: .15),
+                    const SizedBox(height: 20),
 
-            const SizedBox(height: 24),
+                    _sectionTitle(context, AppText.get(context, 'goal'))
+                        .animate(delay: 640.ms)
+                        .fadeIn()
+                        .slideY(begin: .15),
 
-            Consumer<ThemeViewModel>(
-              builder: (context, themeVm, child) {
-                final theme = Theme.of(context);
+                    Row(
+                      children: [
+                        _optionButton(
+                          context: context,
+                          text: AppText.get(context, 'lose'),
+                          value: "lose",
+                          selectedValue: selectedGoal,
+                          onTap: () => setState(() => selectedGoal = "lose"),
+                        ),
+                        const SizedBox(width: 10),
+                        _optionButton(
+                          context: context,
+                          text: AppText.get(context, 'maintain'),
+                          value: "maintain",
+                          selectedValue: selectedGoal,
+                          onTap: () => setState(
+                            () => selectedGoal = "maintain",
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        _optionButton(
+                          context: context,
+                          text: AppText.get(context, 'gain'),
+                          value: "gain",
+                          selectedValue: selectedGoal,
+                          onTap: () => setState(() => selectedGoal = "gain"),
+                        ),
+                      ],
+                    ).animate(delay: 680.ms).fadeIn().slideY(begin: .15),
 
-                return Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: theme.dividerColor),
-                  ),
-                  child: SwitchListTile(
-                    title: Text(AppText.get(context, 'darkMode')),
-                    value: themeVm.isDark,
-                    onChanged: (value) {
-                      themeVm.setTheme(value);
-                    },
-                  ),
-                );
-              },
-            ).animate(delay: 740.ms).fadeIn().slideY(begin: .15),
+                    const SizedBox(height: 24),
 
-            const SizedBox(height: 16),
+                    Consumer<ThemeViewModel>(
+                      builder: (context, themeVm, child) {
+                        return _glassBox(
+                          context: context,
+                          padding: EdgeInsets.zero,
+                          borderRadius: BorderRadius.circular(22),
+                          child: SwitchListTile(
+                            title: Text(
+                              AppText.get(context, 'darkMode'),
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            secondary: Icon(
+                              themeVm.isDark
+                                  ? Icons.dark_mode_rounded
+                                  : Icons.light_mode_rounded,
+                              color: theme.colorScheme.primary,
+                            ),
+                            value: themeVm.isDark,
+                            activeColor: theme.colorScheme.primary,
+                            onChanged: (value) {
+                              themeVm.setTheme(value);
+                            },
+                          ),
+                        );
+                      },
+                    ).animate(delay: 740.ms).fadeIn().slideY(begin: .15),
 
-            const LanguageSwitcher()
-                .animate(delay: 800.ms)
-                .fadeIn()
-                .slideY(begin: .15),
+                    const SizedBox(height: 16),
 
-            const SizedBox(height: 24),
+                    _languageSwitcherCard(context)
+                        .animate(delay: 800.ms)
+                        .fadeIn()
+                        .slideY(begin: .15),
 
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () => _saveSettings(vm),
-                child: Text(
-                  AppText.get(context, 'saveChanges'),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: () => _saveSettings(vm),
+                        child: Text(
+                          AppText.get(context, 'saveChanges'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ).animate(delay: 860.ms).fadeIn().scale(
+                          begin: const Offset(.96, .96),
+                        ),
+
+                    const SizedBox(height: 16),
+
+                    _glassActionButton(
+                      context: context,
+                      text: AppText.get(context, 'logout'),
+                      onPressed: _logout,
+                      icon: Icons.logout_rounded,
+                    ).animate(delay: 920.ms).fadeIn().slideY(begin: .15),
+
+                    const SizedBox(height: 16),
+
+                    _glassActionButton(
+                      context: context,
+                      text: AppText.get(context, 'deleteAccount'),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          _fadeSlideRoute(const DeleteAccountScreen()),
+                        );
+                      },
+                      icon: Icons.delete_outline_rounded,
+                      isDanger: true,
+                    ).animate(delay: 980.ms).fadeIn().slideY(begin: .15),
+
+                    const SizedBox(height: 30),
+                  ],
                 ),
               ),
-            ).animate(delay: 860.ms).fadeIn().scale(
-                  begin: const Offset(.96, .96),
-                ),
-
-            const SizedBox(height: 16),
-
-            OutlinedButton(
-              onPressed: _logout,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: theme.colorScheme.primary,
-                side: BorderSide(color: theme.dividerColor),
-                minimumSize: const Size(double.infinity, 56),
-              ),
-              child: Text(
-                AppText.get(context, 'logout'),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ).animate(delay: 920.ms).fadeIn().slideY(begin: .15),
-
-            const SizedBox(height: 16),
-
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  _fadeSlideRoute(const DeleteAccountScreen()),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red,
-                side: const BorderSide(color: Colors.red),
-                minimumSize: const Size(double.infinity, 56),
-              ),
-              child: Text(
-                AppText.get(context, 'deleteAccount'),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ).animate(delay: 980.ms).fadeIn().slideY(begin: .15),
-
-            const SizedBox(height: 30),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _blurCircle({
+    required Color color,
+    required double size,
+  }) {
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(
+        sigmaX: 45,
+        sigmaY: 45,
+      ),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+
+  Widget _glassBox({
+    required BuildContext context,
+    required Widget child,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(14),
+    BorderRadius? borderRadius,
+    double? width,
+    double? height,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final radius = borderRadius ?? BorderRadius.circular(18);
+
+    return ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 18,
+          sigmaY: 18,
+        ),
+        child: Container(
+          width: width,
+          height: height,
+          padding: padding,
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.white.withOpacity(0.42),
+            borderRadius: radius,
+            border: Border.all(
+              color: Colors.white.withOpacity(isDark ? 0.16 : 0.60),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.22 : 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: child,
         ),
       ),
     );
@@ -452,7 +582,82 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.only(bottom: 10),
         child: Text(
           title,
-          style: theme.textTheme.titleMedium,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _input(
+    BuildContext context,
+    TextEditingController c,
+    String hint, {
+    required IconData icon,
+    bool isNumber = false,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: 18,
+            sigmaY: 18,
+          ),
+          child: TextField(
+            controller: c,
+            keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+            cursorColor: theme.colorScheme.primary,
+            decoration: InputDecoration(
+              prefixIcon: Icon(
+                icon,
+                color: theme.colorScheme.primary.withOpacity(0.85),
+                size: 22,
+              ),
+              hintText: hint,
+              hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.48),
+                fontWeight: FontWeight.w600,
+              ),
+              filled: true,
+              fillColor: isDark
+                  ? Colors.white.withOpacity(0.075)
+                  : Colors.white.withOpacity(0.46),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 18,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: BorderSide(
+                  color: Colors.white.withOpacity(isDark ? 0.15 : 0.55),
+                  width: 1.2,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: BorderSide(
+                  color: Colors.white.withOpacity(isDark ? 0.15 : 0.55),
+                  width: 1.2,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.primary.withOpacity(0.75),
+                  width: 1.7,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -466,33 +671,187 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isSelected = selectedValue == value;
 
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 14,
+              sigmaY: 14,
+            ),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? theme.colorScheme.primary.withOpacity(
+                        isDark ? 0.32 : 0.22,
+                      )
+                    : Colors.white.withOpacity(isDark ? 0.07 : 0.34),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected
+                      ? theme.colorScheme.primary.withOpacity(0.70)
+                      : Colors.white.withOpacity(isDark ? 0.14 : 0.50),
+                  width: 1.1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withOpacity(0.16),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Center(
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: TextStyle(
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
+                    fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                  ),
+                  child: Text(
+                    text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _languageSwitcherCard(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Consumer<LanguageViewModel>(
+      builder: (context, languageVm, child) {
+        final currentLanguage = languageVm.locale.languageCode;
+
+        return _glassBox(
+          context: context,
+          padding: const EdgeInsets.all(8),
+          borderRadius: BorderRadius.circular(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsetsDirectional.only(
+                  start: 8,
+                  bottom: 10,
+                  top: 4,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.language_rounded,
+                      size: 21,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      AppText.get(context, 'language'),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Row(
+                  children: [
+                    _languageOption(
+                      context: context,
+                      text: "English",
+                      value: "en",
+                      selectedValue: currentLanguage,
+                      onTap: () {
+                        languageVm.changeLanguage("en");
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _languageOption(
+                      context: context,
+                      text: "العربية",
+                      value: "ar",
+                      selectedValue: currentLanguage,
+                      onTap: () {
+                        languageVm.changeLanguage("ar");
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _languageOption({
+    required BuildContext context,
+    required String text,
+    required String value,
+    required String selectedValue,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isSelected = value == selectedValue;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 260),
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          height: 48,
           decoration: BoxDecoration(
             color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
+                ? theme.colorScheme.primary.withOpacity(isDark ? 0.30 : 0.20)
+                : Colors.white.withOpacity(isDark ? 0.05 : 0.24),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color:
-                  isSelected ? theme.colorScheme.primary : theme.dividerColor,
+              color: isSelected
+                  ? theme.colorScheme.primary.withOpacity(0.75)
+                  : Colors.white.withOpacity(isDark ? 0.10 : 0.40),
+              width: 1.1,
             ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withOpacity(0.18),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : [],
           ),
           child: Center(
             child: AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 220),
               style: TextStyle(
                 color: isSelected
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface.withOpacity(0.72),
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
               ),
               child: Text(text),
             ),
@@ -502,22 +861,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _input(
-    BuildContext context,
-    TextEditingController c,
-    String hint, {
-    bool isNumber = false,
+  Widget _glassActionButton({
+    required BuildContext context,
+    required String text,
+    required VoidCallback onPressed,
+    required IconData icon,
+    bool isDanger = false,
   }) {
     final theme = Theme.of(context);
+    final color = isDanger ? Colors.red : theme.colorScheme.primary;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        controller: c,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        style: theme.textTheme.bodyLarge,
-        decoration: InputDecoration(
-          hintText: hint,
+    return GestureDetector(
+      onTap: onPressed,
+      child: _glassBox(
+        context: context,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        borderRadius: BorderRadius.circular(18),
+        height: 56,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: color,
+              size: 22,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              text,
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
         ),
       ),
     );

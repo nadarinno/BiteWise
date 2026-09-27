@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'theme/app_theme.dart';
+import 'utils/app_theme.dart';
 import 'viewmodel/theme_view_model.dart';
 import 'viewmodel/nutrition_view_model.dart';
 import 'viewmodel/chat_view_model.dart';

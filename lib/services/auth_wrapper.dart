@@ -1,7 +1,8 @@
 
 import 'package:bitewise/services/user_service.dart';
-import 'package:bitewise/view/home.dart';
+
 import 'package:bitewise/view/login.dart';
+import 'package:bitewise/view/main_navigation_screen.dart';
 import 'package:bitewise/view/profilesetup.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -51,7 +52,7 @@ class ProfileCheckScreen extends StatelessWidget {
         }
 
         if (profileSnapshot.data == true) {
-          return const HomeScreen();
+          return const MainNavigationScreen();
         }
 
         return ProfileSetupScreen();

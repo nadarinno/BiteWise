@@ -173,6 +173,12 @@ class AppText {
 'nutritionFacts':'Netrition Facts',
 'mealDetails':'Meal Details',
 
+'todayMacros': 'Today Macros',
+'scanYourMeal': 'Scan your meal',
+'scanMealDescription': 'Take or upload a food photo to analyze calories and macros.',
+'analyzing': 'Analyzing your meal...',
+
+
     },
     'ar': {
       'appName': 'بايت وايز',
@@ -333,12 +339,16 @@ class AppText {
 'days': 'أيام',
 'mealDetails':'تفاصيل الوجبة',
 'nutritionFacts':'حقائق غذائية',
+'todayMacros': 'ماكروز اليوم',
+
+'scanYourMeal': 'افحصي وجبتك',
+'scanMealDescription': 'صوري أو ارفعي صورة للطعام لتحليل السعرات والماكروز.',
+'analyzing': 'جاري تحليل الوجبة...',
     },
   };
+static String get(BuildContext context, String key) {
+  final languageCode = context.read<LanguageViewModel>().locale.languageCode;
 
-  static String get(BuildContext context, String key) {
-    final languageCode = context.watch<LanguageViewModel>().locale.languageCode;
-
-    return _texts[languageCode]?[key] ?? _texts['en']?[key] ?? key;
-  }
+  return _texts[languageCode]?[key] ?? _texts['en']?[key] ?? key;
+}
 }

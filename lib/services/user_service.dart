@@ -147,18 +147,34 @@ Future<void> saveUser(UserModel user) async {
   }
 
   // GOAL CALORIES
-  Future<int> calculateGoalCalories() async {
+Future<int> calculateGoalCalories() async {
   final user = await getUserData();
 
-  final age = user["age"];
-  final weight = user["weight"];
-  final height = user["height"];
-  final goal = user["goal"];
+  final ageRaw = user["age"];
+  final weightRaw = user["weight"] ?? user["weightKg"];
+  final heightRaw = user["height"] ?? user["heightCm"];
+  final goal = user["goal"] ?? "maintain";
   final gender = user["gender"] ?? "female";
   final activityLevel = user["activityLevel"] ?? "sedentary";
 
-  if (age == null || weight == null || height == null || goal == null) {
+  if (ageRaw == null || weightRaw == null || heightRaw == null) {
     throw Exception("User data incomplete");
+  }
+
+  final age = ageRaw is num
+      ? ageRaw.toDouble()
+      : double.tryParse(ageRaw.toString());
+
+  final weight = weightRaw is num
+      ? weightRaw.toDouble()
+      : double.tryParse(weightRaw.toString());
+
+  final height = heightRaw is num
+      ? heightRaw.toDouble()
+      : double.tryParse(heightRaw.toString());
+
+  if (age == null || weight == null || height == null) {
+    throw Exception("Invalid user data");
   }
 
   double bmr;
@@ -181,13 +197,156 @@ Future<void> saveUser(UserModel user) async {
     activityFactor = 1.2;
   }
 
-  double tdee = bmr * activityFactor;
+  final tdee = bmr * activityFactor;
 
-  if (goal == "lose") return (tdee - 500).round();
-  if (goal == "gain") return (tdee + 500).round();
+  int targetCalories;
 
-  return tdee.round();
+  if (goal == "lose") {
+   
+    targetCalories = (tdee * 0.80).round();
+  } else if (goal == "gain") {
+
+    targetCalories = (tdee * 1.15).round();
+  } else {
+    targetCalories = tdee.round();
+  }
+
+ 
+  if (gender == "male") {
+    if (goal == "lose" && targetCalories < 1600) {
+      targetCalories = 1600;
+    }
+  } else {
+    if (goal == "lose" && targetCalories < 1300) {
+      targetCalories = 1300;
+    }
+  }
+
+  return targetCalories;
 }
+
+
+// Macros goal
+Future<Map<String, int>> calculateMacroTargets() async {
+  final rawCalories = await calculateGoalCalories();
+  final userData = await getUserData();
+
+  final goal = userData["goal"] ?? "maintain";
+  final activity = userData["activityLevel"] ?? "moderate";
+
+  final weightRaw = userData["weight"] ?? userData["weightKg"] ?? 70;
+  final weight = weightRaw is num
+      ? weightRaw.toDouble()
+      : double.tryParse(weightRaw.toString()) ?? 70.0;
+
+  int calories = rawCalories;
+
+
+  if (goal == "lose" && calories < 1300) {
+    calories = 1300;
+  } else if (goal == "maintain" && calories < 1500) {
+    calories = 1500;
+  } else if (goal == "gain" && calories < 1700) {
+    calories = 1700;
+  }
+
+  double proteinPerKg;
+  double fatPercent;
+
+  if (goal == "lose") {
+    if (activity == "sedentary") {
+      proteinPerKg = 1.6;
+      fatPercent = 0.25;
+    } else if (activity == "light") {
+      proteinPerKg = 1.7;
+      fatPercent = 0.25;
+    } else if (activity == "moderate") {
+      proteinPerKg = 1.8;
+      fatPercent = 0.27;
+    } else {
+      proteinPerKg = 2.0;
+      fatPercent = 0.27;
+    }
+  } else if (goal == "gain") {
+    if (activity == "sedentary") {
+      proteinPerKg = 1.6;
+      fatPercent = 0.25;
+    } else if (activity == "light") {
+      proteinPerKg = 1.7;
+      fatPercent = 0.25;
+    } else if (activity == "moderate") {
+      proteinPerKg = 1.8;
+      fatPercent = 0.28;
+    } else {
+      proteinPerKg = 2.0;
+      fatPercent = 0.28;
+    }
+  } else {
+    if (activity == "sedentary") {
+      proteinPerKg = 1.5;
+      fatPercent = 0.25;
+    } else if (activity == "light") {
+      proteinPerKg = 1.6;
+      fatPercent = 0.25;
+    } else if (activity == "moderate") {
+      proteinPerKg = 1.7;
+      fatPercent = 0.27;
+    } else {
+      proteinPerKg = 1.8;
+      fatPercent = 0.27;
+    }
+  }
+
+  int proteinGoal = (weight * proteinPerKg).round();
+
+  int fatsGoal = ((calories * fatPercent) / 9).round();
+
+  final proteinCalories = proteinGoal * 4;
+  final fatsCalories = fatsGoal * 9;
+
+  int remainingCalories = calories - proteinCalories - fatsCalories;
+
+  if (remainingCalories < 0) {
+    remainingCalories = 0;
+  }
+
+  int carbsGoal = (remainingCalories / 4).round();
+
+ 
+  int minCarbs;
+
+  if (goal == "lose") {
+    minCarbs = activity == "sedentary" ? 90 : 110;
+  } else if (goal == "gain") {
+    minCarbs = 180;
+  } else {
+    minCarbs = 130;
+  }
+
+  if (carbsGoal < minCarbs) {
+    carbsGoal = minCarbs;
+
+    final usedCalories = (proteinGoal * 4) + (carbsGoal * 4);
+    final remainingForFats = calories - usedCalories;
+
+    if (remainingForFats > 0) {
+      fatsGoal = (remainingForFats / 9).round();
+    } else {
+      fatsGoal = (weight * 0.6).round();
+    }
+  }
+
+  final fiberGoal = ((calories / 1000) * 14).round();
+
+  return {
+    "proteinGoal": proteinGoal,
+    "carbsGoal": carbsGoal,
+    "fatsGoal": fatsGoal,
+    "fiberGoal": fiberGoal,
+  };
+}
+
+
   // SAVE PLAN
   Future<void> saveDailyPlan(DailyPlan plan) async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
@@ -293,6 +452,40 @@ Future<List<int>> getWeeklyCalories({DateTime? weekStartDate}) async {
   }
 
   return weekData;
+}
+
+Future<List<Map<String, dynamic>>> getTodayMeals() async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+
+  if (uid == null) {
+    throw Exception("User not logged in");
+  }
+
+  final now = DateTime.now();
+
+  final startOfDay = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  );
+
+  final endOfDay = startOfDay.add(const Duration(days: 1));
+
+  final snapshot = await FirebaseFirestore.instance
+      .collection("users")
+      .doc(uid)
+      .collection("meals")
+      .where(
+        "createdAt",
+        isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+      )
+      .where(
+        "createdAt",
+        isLessThan: Timestamp.fromDate(endOfDay),
+      )
+      .get();
+
+  return snapshot.docs.map((doc) => doc.data()).toList();
 }
 
 }

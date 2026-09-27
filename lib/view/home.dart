@@ -1,16 +1,16 @@
 
-import 'package:bitewise/view/plan.dart';
+
+
+import 'dart:ui';
+
+import 'package:bitewise/utils/app_text.dart';
+import 'package:bitewise/utils/app_theme.dart';
 import 'package:bitewise/view/settings.dart';
 import 'package:bitewise/viewmodel/dashboard_view_model.dart';
 import 'package:bitewise/widget/dashboard_section.dart';
-import 'package:bitewise/utils/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-
-import 'camera.dart';
-import 'chat.dart';
-import 'history.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,13 +20,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  double _navScale = 1.0;
-
   @override
   void initState() {
     super.initState();
 
     Future.microtask(() {
+      if (!mounted) return;
       context.read<DashboardViewModel>().loadDashboard();
     });
   }
@@ -41,7 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
           final tween = Tween(
             begin: const Offset(0.08, 0),
             end: Offset.zero,
-          ).chain(CurveTween(curve: Curves.easeOutCubic));
+          ).chain(
+            CurveTween(curve: Curves.easeOutCubic),
+          );
 
           return FadeTransition(
             opacity: animation,
@@ -59,55 +60,77 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final vm = context.watch<DashboardViewModel>();
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 18, 22, 115),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _header(context, vm)
-                      .animate()
-                      .fadeIn(duration: 500.ms)
-                      .slideY(
-                        begin: -0.25,
-                        curve: Curves.easeOutCubic,
-                      ),
-
-                  const SizedBox(height: 28),
-
-                  const DashboardSection()
-                      .animate()
-                      .fadeIn(delay: 200.ms, duration: 500.ms)
-                      .slideY(
-                        begin: 0.18,
-                        curve: Curves.easeOutCubic,
-                      ),
-                ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+           colors: AppTheme.backgroundGradientColors(isDark),
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -80,
+              left: -60,
+              child: _blurCircle(
+                color: theme.colorScheme.primary.withOpacity(0.30),
+                size: 200,
               ),
             ),
-          ),
 
-          Positioned(
-            left: 24,
-            right: 24,
-            bottom: 18,
-            child: SafeArea(
-              top: false,
-              child: _homeNavBar(context)
-                  .animate()
-                  .fadeIn(delay: 350.ms, duration: 450.ms)
-                  .slideY(
-                    begin: 1,
-                    curve: Curves.easeOutBack,
-                  ),
+            Positioned(
+              top: 180,
+              right: -70,
+              child: _blurCircle(
+                color: Colors.purple.withOpacity(isDark ? 0.22 : 0.18),
+                size: 190,
+              ),
             ),
-          ),
-        ],
+
+            Positioned(
+              bottom: -90,
+              left: 30,
+              child: _blurCircle(
+                color: Colors.cyan.withOpacity(isDark ? 0.16 : 0.22),
+                size: 190,
+              ),
+            ),
+
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 115),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _header(context, vm)
+                        .animate()
+                        .fadeIn(duration: 500.ms)
+                        .slideY(
+                          begin: -0.25,
+                          curve: Curves.easeOutCubic,
+                        ),
+
+                    const SizedBox(height: 28),
+
+                    const DashboardSection()
+                        .animate()
+                        .fadeIn(delay: 200.ms, duration: 500.ms)
+                        .slideY(
+                          begin: 0.18,
+                          curve: Curves.easeOutCubic,
+                        ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -115,192 +138,180 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _header(BuildContext context, DashboardViewModel vm) {
     final theme = Theme.of(context);
 
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "BiteWise AI",
-                style: theme.textTheme.headlineLarge,
-              ),
-
-              const SizedBox(height: 6),
-
-              Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: "${AppText.get(context, 'welcome')} ",
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 18,
-                      ),
-                    ),
-                    TextSpan(
-                      text: vm.userName.isEmpty
-                          ? AppText.get(context, 'user')
-                          : vm.userName,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const TextSpan(
-                      text: " 👋",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ],
+    return _glassBox(
+      context: context,
+      padding: const EdgeInsets.all(18),
+      borderRadius: BorderRadius.circular(28),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "BiteWise AI",
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
 
-        GestureDetector(
-          onTap: () {
-            _openPage(const SettingsScreen());
-          },
-          child: Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: theme.dividerColor),
+                const SizedBox(height: 8),
+
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "${AppText.get(context, 'welcome')} ",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextSpan(
+                        text: vm.userName.isEmpty
+                            ? AppText.get(context, 'user')
+                            : vm.userName,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: " 👋",
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            child: Icon(
-              Icons.settings_rounded,
-              color: theme.colorScheme.onSurface,
-              size: 30,
-            ),
-          )
-              .animate()
-              .scale(
-                duration: 450.ms,
-                curve: Curves.easeOutBack,
-              )
-              .fadeIn(duration: 350.ms),
-        ),
-      ],
+          ),
+
+          const SizedBox(width: 14),
+
+          GestureDetector(
+            onTap: () {
+              _openPage(const SettingsScreen());
+            },
+            child: _settingsGlassButton(context)
+                .animate()
+                .scale(
+                  duration: 450.ms,
+                  curve: Curves.easeOutBack,
+                )
+                .fadeIn(duration: 350.ms),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _homeNavBar(BuildContext context) {
+  Widget _settingsGlassButton(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return AnimatedScale(
-      scale: _navScale,
-      duration: const Duration(milliseconds: 140),
-      curve: Curves.easeOut,
-      child: Container(
-        height: 58,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface,
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.35),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
-            ),
-          ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 18,
+          sigmaY: 18,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _navItem(
-              context: context,
-              icon: Icons.camera_alt_outlined,
-              onTap: () {
-                _openPage(const CameraScreen());
-              },
+        child: Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.white.withOpacity(0.38),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: Colors.white.withOpacity(isDark ? 0.16 : 0.55),
+              width: 1.2,
             ),
-            _navItem(
-              context: context,
-              icon: Icons.chat_bubble_outline,
-              onTap: () {
-                _openPage(const ChatScreen());
-              },
-            ),
-            _navItem(
-              context: context,
-              icon: Icons.home_rounded,
-              isSelected: true,
-              isCenter: true,
-              onTap: () {},
-            ),
-            _navItem(
-              context: context,
-              icon: Icons.history_outlined,
-              onTap: () {
-                _openPage(const HistoryScreen());
-              },
-            ),
-            _navItem(
-              context: context,
-              icon: Icons.calendar_month_outlined,
-              onTap: () {
-                _openPage(const PlanScreen());
-              },
-            ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.20 : 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.settings_rounded,
+            color: theme.colorScheme.primary,
+            size: 30,
+          ),
         ),
       ),
     );
   }
 
-  Widget _navItem({
-    required BuildContext context,
-    required IconData icon,
-    required VoidCallback onTap,
-    bool isSelected = false,
-    bool isCenter = false,
+  Widget _blurCircle({
+    required Color color,
+    required double size,
   }) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTapDown: (_) {
-        setState(() {
-          _navScale = 0.97;
-        });
-      },
-      onTapCancel: () {
-        setState(() {
-          _navScale = 1.0;
-        });
-      },
-      onTapUp: (_) {
-        setState(() {
-          _navScale = 1.0;
-        });
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        width: isCenter ? 48 : 42,
-        height: isCenter ? 48 : 42,
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(
+        sigmaX: 45,
+        sigmaY: 45,
+      ),
+      child: Container(
+        width: size,
+        height: size,
         decoration: BoxDecoration(
-          color: isSelected ? theme.scaffoldBackgroundColor : Colors.transparent,
+          color: color,
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          icon,
-          color: isSelected
-              ? theme.colorScheme.onSurface
-              : theme.scaffoldBackgroundColor,
-          size: isCenter ? 27 : 24,
+      ),
+    );
+  }
+
+  Widget _glassBox({
+    required BuildContext context,
+    required Widget child,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(14),
+    BorderRadius? borderRadius,
+    double? width,
+    double? height,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final radius = borderRadius ?? BorderRadius.circular(18);
+
+    return ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 18,
+          sigmaY: 18,
         ),
-      )
-          .animate()
-          .fadeIn(duration: 350.ms)
-          .scale(
-            begin: const Offset(0.85, 0.85),
-            duration: 350.ms,
-            curve: Curves.easeOutBack,
+        child: Container(
+          width: width,
+          height: height,
+          padding: padding,
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.white.withOpacity(0.42),
+            borderRadius: radius,
+            border: Border.all(
+              color: Colors.white.withOpacity(isDark ? 0.16 : 0.60),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.22 : 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
           ),
+          child: child,
+        ),
+      ),
     );
   }
 }

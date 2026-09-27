@@ -1,4 +1,5 @@
 
+
 import 'package:bitewise/utils/app_text.dart';
 import 'package:bitewise/viewmodel/dashboard_view_model.dart';
 import 'package:bitewise/widget/calories_chart.dart';
@@ -7,6 +8,7 @@ import 'package:bitewise/widget/summary_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:bitewise/widget/glass_container.dart';
 
 class DashboardSection extends StatelessWidget {
   const DashboardSection({super.key});
@@ -44,6 +46,16 @@ class DashboardSection extends StatelessWidget {
 
     final todayPercent = (todayProgress * 100).clamp(0, 100).round();
     final remainingPercent = (remainingProgress * 100).clamp(0, 100).round();
+
+    final todayProtein = vm.todayProtein;
+    final todayCarbs = vm.todayCarbs;
+    final todayFats = vm.todayFats;
+    final todayFiber = vm.todayFiber;
+
+    final proteinGoal = vm.proteinGoal;
+    final carbsGoal = vm.carbsGoal;
+    final fatsGoal = vm.fatsGoal;
+    final fiberGoal = vm.fiberGoal;
 
     return Column(
       children: [
@@ -157,6 +169,23 @@ class DashboardSection extends StatelessWidget {
 
         const SizedBox(height: 20),
 
+        _macroProgressCard(
+          context: context,
+          protein: todayProtein,
+          carbs: todayCarbs,
+          fats: todayFats,
+          fiber: todayFiber,
+          proteinGoal: proteinGoal,
+          carbsGoal: carbsGoal,
+          fatsGoal: fatsGoal,
+           fiberGoal: fiberGoal,
+        )
+            .animate(delay: 300.ms)
+            .fadeIn(duration: 450.ms)
+            .slideY(begin: .15),
+
+        const SizedBox(height: 20),
+
         Directionality(
           textDirection: TextDirection.ltr,
           child: Row(
@@ -235,8 +264,6 @@ class DashboardSection extends StatelessWidget {
     required IconData icon,
     required double progress,
   }) {
-
-
     return Directionality(
       textDirection: TextDirection.ltr,
       child: DashboardStatCard(
@@ -249,6 +276,154 @@ class DashboardSection extends StatelessWidget {
       ),
     );
   }
+
+
+Widget _macroProgressCard({
+  required BuildContext context,
+  required int protein,
+  required int carbs,
+  required int fats,
+  required int fiber,
+  required int proteinGoal,
+  required int carbsGoal,
+  required int fatsGoal,
+  required int fiberGoal,
+}) {
+  final theme = Theme.of(context);
+  final isArabic = Directionality.of(context) == TextDirection.rtl;
+
+  return GlassContainer(
+    padding: const EdgeInsets.all(16),
+    borderRadius: BorderRadius.circular(24),
+    blur: 18,
+    opacity: 0.08,
+    child: Column(
+      crossAxisAlignment:
+          isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppText.get(context, 'todayMacros'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+
+        const SizedBox(height: 14),
+
+        _macroRow(
+          context: context,
+          title: AppText.get(context, 'protein'),
+          value: protein,
+          target: proteinGoal,
+          icon: Icons.fitness_center,
+        ),
+
+        const SizedBox(height: 10),
+
+        _macroRow(
+          context: context,
+          title: AppText.get(context, 'carbs'),
+          value: carbs,
+          target: carbsGoal,
+          icon: Icons.rice_bowl,
+        ),
+
+        const SizedBox(height: 10),
+
+        _macroRow(
+          context: context,
+          title: AppText.get(context, 'fats'),
+          value: fats,
+          target: fatsGoal,
+          icon: Icons.water_drop_outlined,
+        ),
+
+        const SizedBox(height: 10),
+
+        _macroRow(
+          context: context,
+          title: AppText.get(context, 'fiber'),
+          value: fiber,
+          target: fiberGoal,
+          icon: Icons.grass,
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _macroRow({
+  required BuildContext context,
+  required String title,
+  required int value,
+  required int target,
+  required IconData icon,
+}) {
+  final theme = Theme.of(context);
+  final progress = target > 0 ? (value / target).clamp(0.0, 1.0) : 0.0;
+  final isDark = theme.brightness == Brightness.dark;
+
+  return GlassContainer(
+    padding: const EdgeInsets.all(12),
+    borderRadius: BorderRadius.circular(18),
+    blur: 10,
+    opacity: 0.07,
+    child: Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(isDark ? 0.10 : 0.35),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Colors.white.withOpacity(isDark ? 0.15 : 0.45),
+            ),
+          ),
+          child: Icon(
+            icon,
+            color: theme.colorScheme.primary,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: Colors.white.withOpacity(isDark ? 0.08 : 0.30),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          "$value / $target g",
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+  
 
   Widget _weekButton({
     required IconData icon,
